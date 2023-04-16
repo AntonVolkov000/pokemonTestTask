@@ -9,7 +9,7 @@ import 'dart:math';
 const String _baseUrl = 'https://pokeapi.co/api/v2/';
 
 class PokemonBloc {
-  final Pokemon _pokemon = Pokemon();
+  Pokemon _pokemon = Pokemon();
 
   final _pokemonStateController = StreamController<Pokemon>();
   StreamSink<Pokemon> get _inPokemon => _pokemonStateController.sink;
@@ -86,6 +86,7 @@ class PokemonBloc {
   }
 
   Future<void> _mapEventToState(PokemonEvent event) async {
+    _pokemon = Pokemon();
     if (event is RandomPokemonEvent) {
       await _setRandomPokemon();
     } else {
