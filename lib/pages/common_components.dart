@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:pokemon_test_task/pages/pokemon.dart';
+import 'package:pokemon_test_task/pages/pokemon_bloc.dart';
 
 class Styles {
   static TextStyle getTextStyle() {
@@ -16,8 +18,8 @@ class Styles {
   }
 }
 
-class AppBarTemplate extends StatelessWidget {
-  const AppBarTemplate({Key? key}) : super(key: key);
+class AppBarWidget extends StatelessWidget {
+  const AppBarWidget({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -47,27 +49,56 @@ class AppBarTemplate extends StatelessWidget {
   }
 }
 
+class StreamBuilderWidget extends StatelessWidget {
+  const StreamBuilderWidget({Key? key, required this.pokemonBloc}) : super(key: key);
+  
+  final PokemonBloc pokemonBloc;
 
-class PageTemplate extends StatelessWidget {
-  const PageTemplate({Key? key, required this.name, required this.baseExperience,
-    required this.abilities, required this.abilityList, required this.bottomComponent,
-    required this.information})
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder(
+      stream: pokemonBloc.pokemon,
+      initialData: Pokemon(),
+      builder: (BuildContext context, AsyncSnapshot<Pokemon> snapshot) {
+        return Column(
+          children: [
+            Text('${snapshot.data?.findInfo}', style: Styles.getTextStyle()),
+            Text('${snapshot.data?.name}', style: Styles.getTextStyle()),
+            Text('${snapshot.data?.baseExperience}', style: Styles.getTextStyle()),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Column(
+                  children: [
+                    Text('${snapshot.data?.abilities}', style: Styles.getTextStyle())
+                  ],
+                ),
+                Column(
+                  children: snapshot.data?.abilityList as List<Text>,
+                )
+              ],
+            )
+          ],
+        );
+      },
+    );
+  }
+}
+
+class PageWidget extends StatelessWidget {
+  const PageWidget({Key? key, required this.pokemonBloc, required this.bottomComponent})
       : super(key: key);
-
-  final String information;
-  final String name;
-  final String baseExperience;
-  final String abilities;
-  final List<Text> abilityList;
+  
+  final PokemonBloc pokemonBloc;
   final Row bottomComponent;
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffd54a48),
       appBar: const PreferredSize(
         preferredSize: Size.fromHeight(58),
-        child: AppBarTemplate(),
+        child: AppBarWidget(),
       ),
       body: SafeArea(
           child: Container(
@@ -78,26 +109,7 @@ class PageTemplate extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Column(
-                        children: [
-                          Text(information, style: Styles.getTextStyle()),
-                          Text(name, style: Styles.getTextStyle()),
-                          Text(baseExperience, style: Styles.getTextStyle()),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Column(
-                                children: [
-                                  Text(abilities, style: Styles.getTextStyle()),
-                                ],
-                              ),
-                              Column(
-                                children: abilityList,
-                              )
-                            ],
-                          )
-                        ],
-                      )
+                      StreamBuilderWidget(pokemonBloc: pokemonBloc)
                     ],
                   ),
                   bottomComponent
@@ -108,5 +120,3 @@ class PageTemplate extends StatelessWidget {
     );
   }
 }
-
-

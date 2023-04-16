@@ -1,8 +1,7 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:pokemon_test_task/pages/common_components.dart';
-
-const String _baseUrl = 'https://pokeapi.co/api/v2/';
+import 'package:pokemon_test_task/pages/pokemon_bloc.dart';
+import 'package:pokemon_test_task/pages/pokemon_event.dart';
 
 class SearchPokemon extends StatefulWidget {
   const SearchPokemon({Key? key}) : super(key: key);
@@ -13,52 +12,10 @@ class SearchPokemon extends StatefulWidget {
 
 class _SearchPokemonState extends State<SearchPokemon> {
 
-  String _name = '';
-  String _baseExperience = '';
-  String _abilities = '';
-  String _information = '';
-  final List<Text> _abilityList = [];
+  final _randomPokemonBloc = PokemonBloc();
 
   final TextEditingController textController = TextEditingController();
   final FocusNode focusNode = FocusNode();
-
-  final Dio _dio = Dio(BaseOptions(
-      baseUrl: _baseUrl
-  ));
-
-  Future<void> _setPokemonByName(String pokemonName) async {
-    setState(() {
-      _information = '';
-    });
-    Response? response;
-    try {
-      response = await _dio.get('pokemon/$pokemonName');
-    } on DioError catch (e) {
-      if (e.response?.statusCode == 404) {
-        setState(() {
-          _information = 'Pokemon not found';
-        });
-      }
-    }
-    if (_information == '') {
-      setState(() {
-        if (response?.data['name'] != null) {
-          _name = 'Name: ${response?.data['name']}';
-        }
-        if (response?.data['base_experience'] != null) {
-          _baseExperience = 'Base experience: ${response?.data['base_experience']}';
-        }
-        if (response?.data['abilities'] != null) {
-          _abilities = 'Abilities: ';
-          _abilityList.clear();
-          for (Map ability in response?.data['abilities']) {
-            String abilityName = ability['ability']['name'];
-            _abilityList.add(Text(abilityName, style: Styles.getTextStyle()));
-          }
-        }
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +29,7 @@ class _SearchPokemonState extends State<SearchPokemon> {
               margin: const EdgeInsets.only(bottom: 20),
               child: TextField(
                 onSubmitted: (pokemonName) {
-                  _setPokemonByName(pokemonName);
+                  _randomPokemonBloc.pokemonEventSink.add(SearchPokemonEvent(pokemonName));
                 },
                 style: const TextStyle(color: Colors.white),
                 controller: textController,
@@ -92,7 +49,7 @@ class _SearchPokemonState extends State<SearchPokemon> {
             ElevatedButton(
               onPressed: () {
                 focusNode.unfocus();
-                _setPokemonByName(textController.text);
+                _randomPokemonBloc.pokemonEventSink.add(SearchPokemonEvent(textController.text));
               },
               style: Styles.getElevatedButtonStyle(),
               child: Text('Search', style: Styles.getTextStyle()),
@@ -104,9 +61,14 @@ class _SearchPokemonState extends State<SearchPokemon> {
 
     return GestureDetector(
       onTap: () => focusNode.unfocus(),
-      child: PageTemplate(name: _name, baseExperience: _baseExperience,
-          abilities: _abilities, abilityList: _abilityList,
-          bottomComponent: bottomComponent, information: _information,),
+      child: PageWidget(pokemonBloc: _randomPokemonBloc,
+          bottomComponent: bottomComponent),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _randomPokemonBloc.dispose();
   }
 }
